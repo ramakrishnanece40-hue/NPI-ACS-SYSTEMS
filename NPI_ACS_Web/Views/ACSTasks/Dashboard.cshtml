@@ -1,0 +1,177 @@
+@using NPI_ACS_Web.Models
+@model IEnumerable<NPI_ACS_Web.Models.ACSTask>
+
+<h2 class="mb-4">NPI ACS Dashboard</h2>
+
+<div class="row">
+
+<div class="col-md-2">
+<div class="card bg-dark text-white text-center">
+<div class="card-body">
+<h3>@ViewBag.Total</h3>
+<p>Total Tasks</p>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card bg-danger text-white text-center">
+<div class="card-body">
+<h3>@ViewBag.Open</h3>
+<p>Open</p>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card bg-warning text-dark text-center">
+<div class="card-body">
+<h3>@ViewBag.Ongoing</h3>
+<p>Ongoing</p>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card bg-success text-white text-center">
+<div class="card-body">
+<h3>@ViewBag.Closed</h3>
+<p>Closed</p>
+</div>
+</div>
+</div>
+
+<div class="col-md-2">
+<div class="card bg-secondary text-white text-center">
+<div class="card-body">
+<h3>@ViewBag.Overdue</h3>
+<p>Overdue</p>
+</div>
+</div>
+</div>
+
+</div>
+
+<hr/>
+
+<div class="row mt-4">
+
+<div class="col-md-6">
+<h5>Status Distribution</h5>
+<canvas id="statusChart"></canvas>
+</div>
+
+<div class="col-md-6">
+<h5>Priority Distribution</h5>
+<canvas id="priorityChart"></canvas>
+</div>
+
+</div>
+
+<hr/>
+
+<h4>Overdue Tasks</h4>
+
+<table class="table table-bordered">
+
+<thead class="table-dark">
+
+<tr>
+<th>Project</th>
+<th>Model</th>
+<th>PIC</th>
+<th>Due Date</th>
+<th>Status</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+@foreach (var task in Model.Where(x => x.DueDate < DateTime.Today && x.Status != "Close"))
+{
+<tr class="table-danger">
+
+<td>@task.Project</td>
+<td>@task.Model</td>
+<td>@task.NeolyncPIC</td>
+<td>@task.DueDate?.ToString("dd-MM-yyyy")</td>
+<td>@task.Status</td>
+
+</tr>
+}
+
+</tbody>
+
+</table>
+
+<script>
+
+var statusChart = new Chart(document.getElementById("statusChart"), {
+
+type: 'pie',
+
+data: {
+
+labels: ['Open','Ongoing','Closed'],
+
+datasets: [{
+
+data: [
+
+@ViewBag.Open,
+@ViewBag.Ongoing,
+@ViewBag.Closed
+
+],
+
+backgroundColor: [
+
+'#dc3545',
+'#ffc107',
+'#198754'
+
+]
+
+}]
+
+}
+
+});
+
+
+var priorityChart = new Chart(document.getElementById("priorityChart"), {
+
+type: 'bar',
+
+data: {
+
+labels: ['High','Medium','Low'],
+
+datasets: [{
+
+label:'Priority',
+
+data:[
+
+@Model.Count(x=>x.Priority=="High"),
+@Model.Count(x=>x.Priority=="Medium"),
+@Model.Count(x=>x.Priority=="Low")
+
+],
+
+backgroundColor:[
+
+'#dc3545',
+'#ffc107',
+'#198754'
+
+]
+
+}]
+
+}
+
+});
+
+</script>

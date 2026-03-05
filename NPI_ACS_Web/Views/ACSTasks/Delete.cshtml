@@ -1,0 +1,25 @@
+@model NPI_ACS_Web.Models.ACSTask
+
+@{
+    ViewData["Title"] = "Delete Task";
+}
+
+<h2>Delete Task</h2>
+
+<h4>Are you sure you want to delete this task?</h4>
+
+<div>
+    <strong>Project:</strong> @Model.Project <br />
+    <strong>Product:</strong> @Model.Product <br />
+    <strong>Status:</strong> @Model.Status <br />
+    <strong>Priority:</strong> @Model.Priority <br />
+</div>
+
+<br />
+
+<form asp-action="Delete">
+    <input type="hidden" asp-for="Id" />
+
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>

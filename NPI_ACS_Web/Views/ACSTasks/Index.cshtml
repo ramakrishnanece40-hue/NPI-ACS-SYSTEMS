@@ -1,0 +1,91 @@
+@model IEnumerable<NPI_ACS_Web.Models.ACSTask>
+
+<h2>ACS Tasks</h2>
+<table class="table table-bordered table-striped">
+
+<thead class="table-dark">
+<tr>
+<th>Project</th>
+<th>ODM</th>
+<th>Product</th>
+<th>Model</th>
+<th>Question</th>
+<th>Action Detail</th>
+<th>4M</th>
+<th>Neolync PIC</th>
+<th>Customer PIC</th>
+<th>Priority</th>
+<th>Status</th>
+<th>Start Date</th>
+<th>Due Date</th>
+<th>Actual Close</th>
+<th>Remarks</th>
+<th>Attachment</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody>
+
+@foreach (var task in Model)
+{
+<tr>
+
+<td>@task.Project</td>
+<td>@task.ODM</td>
+<td>@task.Product</td>
+<td>@task.Model</td>
+<td>@task.Question</td>
+<td>@task.ActionDetail</td>
+<td>@task.FourM</td>
+<td>@task.NeolyncPIC</td>
+<td>@task.CustomerPIC</td>
+<td>@task.Priority</td>
+<td>
+@if (task.Status == "Open")
+{
+<span class="badge bg-danger">Open</span>
+}
+else if (task.Status == "Ongoing")
+{
+<span class="badge bg-warning text-dark">Ongoing</span>
+}
+else if (task.Status == "Closed")
+{
+<span class="badge bg-success">Closed</span>
+}
+else
+{
+<span>@task.Status</span>
+}
+</td>
+
+<td>@task.StartDate?.ToString("yyyy-MM-dd")</td>
+<td>@task.DueDate?.ToString("yyyy-MM-dd")</td>
+<td>@task.ActualCloseDate?.ToString("yyyy-MM-dd")</td>
+
+<td>@task.Remarks</td>
+
+<td>
+@if (!string.IsNullOrEmpty(task.AttachmentPath))
+{
+<a href="@task.AttachmentPath" target="_blank">View</a>
+}
+else
+{
+<span>No File</span>
+}
+</td>
+
+<td>
+<a asp-action="Edit" asp-route-id="@task.Id">Edit</a> |
+<a asp-action="Details" asp-route-id="@task.Id">Details</a> |
+<a asp-action="Delete" asp-route-id="@task.Id">Delete</a>
+</td>
+
+</tr>
+}
+
+</tbody>
+
+</table>

@@ -1,0 +1,91 @@
+@model IEnumerable<NPI_ACS_Web.Models.ACSTask>
+
+<h2 class="mb-4">NPI ACS Dashboard</h2>
+
+<div class="row">
+
+<div class="col-md-3">
+<div class="card bg-dark text-white text-center">
+<div class="card-body">
+<h3>@ViewBag.Total</h3>
+<p>Total Tasks</p>
+</div>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card bg-danger text-white text-center">
+<div class="card-body">
+<h3>@ViewBag.Open</h3>
+<p>Open</p>
+</div>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card bg-warning text-dark text-center">
+<div class="card-body">
+<h3>@ViewBag.Ongoing</h3>
+<p>Ongoing</p>
+</div>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card bg-success text-white text-center">
+<div class="card-body">
+<h3>@ViewBag.Closed</h3>
+<p>Closed</p>
+</div>
+</div>
+</div>
+
+</div>
+
+<hr/>
+
+<h4>Overdue Tasks</h4>
+
+<table class="table table-bordered table-striped">
+
+<thead class="table-dark">
+<tr>
+<th>Project</th>
+<th>Model</th>
+<th>Neolync PIC</th>
+<th>Due Date</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody>
+
+@{
+var overdueTasks = Model
+.Where(x => x.DueDate.HasValue
+&& x.DueDate.Value.Date < DateTime.Today
+&& x.Status != null
+&& x.Status.ToLower() != "closed")
+.ToList();
+}
+
+@if (!overdueTasks.Any())
+{
+<tr>
+<td colspan="5" class="text-center">No overdue tasks</td>
+</tr>
+}
+
+@foreach (var task in overdueTasks)
+{
+<tr class="table-danger">
+<td>@task.Project</td>
+<td>@task.Model</td>
+<td>@task.NeolyncPIC</td>
+<td>@task.DueDate?.ToString("yyyy-MM-dd")</td>
+<td>@task.Status</td>
+</tr>
+}
+
+</tbody>
+</table>

@@ -1,0 +1,39 @@
+using Microsoft.AspNetCore.Identity;
+
+namespace NPI_ACS_Web.Data
+{
+    public static class SeedRoles
+    {
+        public static async Task Initialize(IServiceProvider serviceProvider)
+        {
+            var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            var userManager = serviceProvider.GetRequiredService<UserManager<IdentityUser>>();
+
+            string[] roles = { "Admin", "User" };
+
+            foreach (var role in roles)
+            {
+                if (!await roleManager.RoleExistsAsync(role))
+                    await roleManager.CreateAsync(new IdentityRole(role));
+            }
+
+            // Create default Admin user
+            string adminEmail = "admin@npi.com";
+            string adminPassword = "Admin@123";
+
+            var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+            if (adminUser == null)
+            {
+                adminUser = new IdentityUser
+                {
+                    UserName = adminEmail,
+                    Email = adminEmail
+                };
+
+                await userManager.CreateAsync(adminUser, adminPassword);
+                await userManager.AddToRoleAsync(adminUser, "Admin");
+            }
+        }
+    }
+}

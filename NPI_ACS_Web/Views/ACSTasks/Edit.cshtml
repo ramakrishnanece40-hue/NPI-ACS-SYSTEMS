@@ -1,0 +1,113 @@
+@model NPI_ACS_Web.Models.ACSTask
+
+<h2>Edit Task</h2>
+
+<form asp-action="Edit" enctype="multipart/form-data">
+
+<input type="hidden" asp-for="Id" />
+
+<div class="form-group">
+<label>Project</label>
+<input asp-for="Project" class="form-control"/>
+</div>
+
+<div class="form-group">
+<label>ODM</label>
+<input asp-for="ODM" class="form-control"/>
+</div>
+
+<div class="form-group">
+<label>Product</label>
+<input asp-for="Product" class="form-control"/>
+</div>
+
+<div class="form-group">
+<label>Model</label>
+<input asp-for="Model" class="form-control"/>
+</div>
+
+<div class="form-group">
+<label>Question</label>
+<textarea asp-for="Question" class="form-control"></textarea>
+</div>
+
+<div class="form-group">
+<label>Action Detail</label>
+<textarea asp-for="ActionDetail" class="form-control"></textarea>
+</div>
+
+<div class="form-group">
+<label>4M</label>
+<input asp-for="FourM" class="form-control"/>
+</div>
+
+<div class="form-group">
+<label>Neolync PIC</label>
+<input asp-for="NeolyncPIC" class="form-control"/>
+</div>
+
+<div class="form-group">
+<label>Customer PIC</label>
+<input asp-for="CustomerPIC" class="form-control"/>
+</div>
+
+<div class="form-group">
+<label>Priority</label>
+<select asp-for="Priority" class="form-control">
+<option>Low</option>
+<option>Medium</option>
+<option>High</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Status</label>
+<select asp-for="Status" class="form-control">
+<option>Open</option>
+<option>Ongoing</option>
+<option>Closed</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Start Date</label>
+<input asp-for="StartDate" type="date" class="form-control"/>
+</div>
+
+<div class="form-group">
+<label>Due Date</label>
+<input asp-for="DueDate" type="date" class="form-control"/>
+</div>
+
+<!-- FIXED PART -->
+
+<div class="form-group">
+<label>Actual Close Date</label>
+<input asp-for="ActualCloseDate" type="date" class="form-control"/>
+</div>
+
+<div class="form-group">
+<label>Remarks</label>
+<textarea asp-for="Remarks" class="form-control"></textarea>
+</div>
+
+<hr/>
+
+<h5>Attachment</h5>
+
+@if (!string.IsNullOrEmpty(Model.AttachmentPath))
+{
+<p>
+Current File:
+<a href="@Model.AttachmentPath" target="_blank">View Attachment</a>
+</p>
+}
+
+<input type="file" name="AttachmentFile" class="form-control"/>
+
+<br/>
+
+<button class="btn btn-primary">Update</button>
+<a asp-action="Index" class="btn btn-secondary">Back</a>
+
+</form>
