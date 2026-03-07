@@ -6,6 +6,7 @@ using OfficeOpenXml;
 
 namespace NPI_ACS_Web.Controllers
 {
+    [Route("ACSTasks")]
     public class ACSTasksController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -20,6 +21,8 @@ namespace NPI_ACS_Web.Controllers
         // ===============================
         // LIST PAGE
         // ===============================
+        [HttpGet("")]
+        [HttpGet("Index")]
         public async Task<IActionResult> Index()
         {
             var tasks = await _context.ACSTasks.ToListAsync();
@@ -29,6 +32,7 @@ namespace NPI_ACS_Web.Controllers
         // ===============================
         // CREATE GET
         // ===============================
+        [HttpGet("Create")]
         public IActionResult Create()
         {
             return View();
@@ -37,7 +41,7 @@ namespace NPI_ACS_Web.Controllers
         // ===============================
         // CREATE POST
         // ===============================
-        [HttpPost]
+        [HttpPost("Create")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ACSTask task, IFormFile? AttachmentFile)
         {
@@ -74,6 +78,7 @@ namespace NPI_ACS_Web.Controllers
         // ===============================
         // EDIT GET
         // ===============================
+        [HttpGet("Edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
             var task = await _context.ACSTasks.FindAsync(id);
@@ -85,9 +90,9 @@ namespace NPI_ACS_Web.Controllers
         }
 
         // ===============================
-        // EDIT POST (FIXED)
+        // EDIT POST
         // ===============================
-        [HttpPost]
+        [HttpPost("Edit/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, ACSTask task, IFormFile? AttachmentFile)
         {
@@ -117,7 +122,6 @@ namespace NPI_ACS_Web.Controllers
                 existingTask.ActualCloseDate = task.ActualCloseDate;
                 existingTask.Remarks = task.Remarks;
 
-                // Upload new attachment if provided
                 if (AttachmentFile != null && AttachmentFile.Length > 0)
                 {
                     string uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
@@ -149,6 +153,7 @@ namespace NPI_ACS_Web.Controllers
         // ===============================
         // DETAILS
         // ===============================
+        [HttpGet("Details/{id}")]
         public async Task<IActionResult> Details(int id)
         {
             var task = await _context.ACSTasks.FindAsync(id);
@@ -162,6 +167,7 @@ namespace NPI_ACS_Web.Controllers
         // ===============================
         // DELETE GET
         // ===============================
+        [HttpGet("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var task = await _context.ACSTasks.FindAsync(id);
@@ -175,7 +181,7 @@ namespace NPI_ACS_Web.Controllers
         // ===============================
         // DELETE POST
         // ===============================
-        [HttpPost, ActionName("Delete")]
+        [HttpPost("Delete/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
@@ -193,66 +199,66 @@ namespace NPI_ACS_Web.Controllers
         // ===============================
         // EXPORT EXCEL
         // ===============================
+        [HttpGet("ExportToExcel")]
         public IActionResult ExportToExcel()
-{
-    ExcelPackage.License.SetNonCommercialPersonal("NPI ACS System");
+        {
+            ExcelPackage.License.SetNonCommercialPersonal("NPI ACS System");
 
-    var tasks = _context.ACSTasks.ToList();
+            var tasks = _context.ACSTasks.ToList();
 
-    using var package = new ExcelPackage();
+            using var package = new ExcelPackage();
+            var ws = package.Workbook.Worksheets.Add("ACS Task List");
 
-    var ws = package.Workbook.Worksheets.Add("ACS Task List");
+            ws.Cells[1, 1].Value = "Project";
+            ws.Cells[1, 2].Value = "ODM";
+            ws.Cells[1, 3].Value = "Product";
+            ws.Cells[1, 4].Value = "Model";
+            ws.Cells[1, 5].Value = "Question";
+            ws.Cells[1, 6].Value = "Action Detail";
+            ws.Cells[1, 7].Value = "4M";
+            ws.Cells[1, 8].Value = "Neolync PIC";
+            ws.Cells[1, 9].Value = "Customer PIC";
+            ws.Cells[1, 10].Value = "Priority";
+            ws.Cells[1, 11].Value = "Status";
+            ws.Cells[1, 12].Value = "Start Date";
+            ws.Cells[1, 13].Value = "Due Date";
+            ws.Cells[1, 14].Value = "Actual Close Date";
+            ws.Cells[1, 15].Value = "Remarks";
+            ws.Cells[1, 16].Value = "Attachment";
 
-    ws.Cells[1, 1].Value = "Project";
-    ws.Cells[1, 2].Value = "ODM";
-    ws.Cells[1, 3].Value = "Product";
-    ws.Cells[1, 4].Value = "Model";
-    ws.Cells[1, 5].Value = "Question";
-    ws.Cells[1, 6].Value = "Action Detail";
-    ws.Cells[1, 7].Value = "4M";
-    ws.Cells[1, 8].Value = "Neolync PIC";
-    ws.Cells[1, 9].Value = "Customer PIC";
-    ws.Cells[1, 10].Value = "Priority";
-    ws.Cells[1, 11].Value = "Status";
-    ws.Cells[1, 12].Value = "Start Date";
-    ws.Cells[1, 13].Value = "Due Date";
-    ws.Cells[1, 14].Value = "Actual Close Date";
-    ws.Cells[1, 15].Value = "Remarks";
-    ws.Cells[1, 16].Value = "Attachment";
+            int row = 2;
 
-    int row = 2;
+            foreach (var item in tasks)
+            {
+                ws.Cells[row, 1].Value = item.Project;
+                ws.Cells[row, 2].Value = item.ODM;
+                ws.Cells[row, 3].Value = item.Product;
+                ws.Cells[row, 4].Value = item.Model;
+                ws.Cells[row, 5].Value = item.Question;
+                ws.Cells[row, 6].Value = item.ActionDetail;
+                ws.Cells[row, 7].Value = item.FourM;
+                ws.Cells[row, 8].Value = item.NeolyncPIC;
+                ws.Cells[row, 9].Value = item.CustomerPIC;
+                ws.Cells[row, 10].Value = item.Priority;
+                ws.Cells[row, 11].Value = item.Status;
+                ws.Cells[row, 12].Value = item.StartDate;
+                ws.Cells[row, 13].Value = item.DueDate;
+                ws.Cells[row, 14].Value = item.ActualCloseDate;
+                ws.Cells[row, 15].Value = item.Remarks;
+                ws.Cells[row, 16].Value = item.AttachmentPath;
 
-    foreach (var item in tasks)
-    {
-        ws.Cells[row, 1].Value = item.Project;
-        ws.Cells[row, 2].Value = item.ODM;
-        ws.Cells[row, 3].Value = item.Product;
-        ws.Cells[row, 4].Value = item.Model;
-        ws.Cells[row, 5].Value = item.Question;
-        ws.Cells[row, 6].Value = item.ActionDetail;
-        ws.Cells[row, 7].Value = item.FourM;
-        ws.Cells[row, 8].Value = item.NeolyncPIC;
-        ws.Cells[row, 9].Value = item.CustomerPIC;
-        ws.Cells[row, 10].Value = item.Priority;
-        ws.Cells[row, 11].Value = item.Status;
-        ws.Cells[row, 12].Value = item.StartDate;
-        ws.Cells[row, 13].Value = item.DueDate;
-        ws.Cells[row, 14].Value = item.ActualCloseDate;
-        ws.Cells[row, 15].Value = item.Remarks;
-        ws.Cells[row, 16].Value = item.AttachmentPath;
+                row++;
+            }
 
-        row++;
-    }
+            ws.Cells.AutoFitColumns();
 
-    ws.Cells.AutoFitColumns();
+            var stream = new MemoryStream(package.GetAsByteArray());
 
-    var stream = new MemoryStream(package.GetAsByteArray());
-
-    return File(
-        stream,
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "ACS_Task_List.xlsx"
-    );
-}
+            return File(
+                stream,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "ACS_Task_List.xlsx"
+            );
+        }
     }
 }
