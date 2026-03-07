@@ -45,4 +45,12 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 
+
+// ⭐ IMPORTANT: Auto create database tables
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
+
 app.Run();
