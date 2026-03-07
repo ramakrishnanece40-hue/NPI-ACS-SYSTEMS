@@ -6,26 +6,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-string? databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-string connectionString;
+// Railway PostgreSQL connection
+var host = Environment.GetEnvironmentVariable("PGHOST");
+var port = Environment.GetEnvironmentVariable("PGPORT");
+var db = Environment.GetEnvironmentVariable("PGDATABASE");
+var user = Environment.GetEnvironmentVariable("PGUSER");
+var password = Environment.GetEnvironmentVariable("PGPASSWORD");
 
-if (!string.IsNullOrEmpty(databaseUrl))
-{
-    var uri = new Uri(databaseUrl);
-    var userInfo = uri.UserInfo.Split(':');
-
-    connectionString =
-        $"Host={uri.Host};" +
-        $"Port={uri.Port};" +
-        $"Database={uri.AbsolutePath.TrimStart('/')};" +
-        $"Username={userInfo[0]};" +
-        $"Password={userInfo[1]};" +
-        $"SSL Mode=Require;Trust Server Certificate=true";
-}
-else
-{
-    connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
-}
+string connectionString =
+    $"Host={host};Port={port};Database={db};Username={user};Password={password};SSL Mode=Require;Trust Server Certificate=true";
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -38,18 +27,16 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 
 var app = builder.Build();
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-app.Urls.Add($"http://*:{port}");
+// Railway PORT
+var portEnv = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Urls.Add($"http://*:{portEnv}");
 
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
 app.UseAuthentication();
@@ -60,11 +47,5 @@ app.MapControllerRoute(
     pattern: "{controller=ACSTasks}/{action=Index}/{id?}");
 
 app.MapRazorPages();
-
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
-}
 
 app.Run();
