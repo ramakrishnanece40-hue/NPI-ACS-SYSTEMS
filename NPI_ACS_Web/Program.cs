@@ -6,11 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-// --------------------
-// Railway PostgreSQL
-// --------------------
+// Railway PostgreSQL connection
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-string connectionString;
+
+string connectionString = "";
 
 if (!string.IsNullOrEmpty(databaseUrl))
 {
@@ -18,17 +17,7 @@ if (!string.IsNullOrEmpty(databaseUrl))
     var userInfo = uri.UserInfo.Split(':');
 
     connectionString =
-        $"Host={uri.Host};" +
-        $"Port={uri.Port};" +
-        $"Database={uri.AbsolutePath.Trim('/')};" +
-        $"Username={userInfo[0]};" +
-        $"Password={userInfo[1]};" +
-        $"SSL Mode=Require;" +
-        $"Trust Server Certificate=true";
-}
-else
-{
-    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.Trim('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
 }
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -43,49 +32,33 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 var app = builder.Build();
 
 
-// --------------------
+// 🚀 AUTO CREATE DATABASE TABLES (VERY IMPORTANT)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
+
+
 // Railway PORT
-// --------------------
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://*:{port}");
 
-
-// --------------------
-// Error handling
-// --------------------
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
 }
 
-
-// --------------------
-// Middleware
-// --------------------
 app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-
-// --------------------
-// Routes
-// --------------------
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=ACSTasks}/{action=Index}/{id?}");
 
 app.MapRazorPages();
-
-
-// --------------------
-// Auto database migration
-// --------------------
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
-}
 
 app.Run();
