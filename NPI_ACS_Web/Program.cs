@@ -7,14 +7,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 // Railway PostgreSQL connection
-var host = Environment.GetEnvironmentVariable("PGHOST");
-var port = Environment.GetEnvironmentVariable("PGPORT");
-var db = Environment.GetEnvironmentVariable("PGDATABASE");
-var user = Environment.GetEnvironmentVariable("PGUSER");
-var password = Environment.GetEnvironmentVariable("PGPASSWORD");
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 
-string connectionString =
-    $"Host={host};Port={port};Database={db};Username={user};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+string connectionString = "";
+
+if (!string.IsNullOrEmpty(databaseUrl))
+{
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':');
+
+    connectionString =
+        $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.Trim('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+}
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
