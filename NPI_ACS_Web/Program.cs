@@ -7,13 +7,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services
 builder.Services.AddControllersWithViews();
 
-// PostgreSQL connection
+// Railway PostgreSQL connection
 var connectionString =
     Environment.GetEnvironmentVariable("DATABASE_URL") ??
     builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
+
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -46,8 +47,7 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 
-
-// ⭐ IMPORTANT: Auto create database tables
+// Auto database migration
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
