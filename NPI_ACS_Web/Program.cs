@@ -37,6 +37,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// MAIN ROUTING
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=ACSTasks}/{action=Index}/{id?}");
