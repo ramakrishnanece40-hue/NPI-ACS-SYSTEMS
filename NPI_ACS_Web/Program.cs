@@ -6,25 +6,27 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+
 string connectionString;
 
-// Railway PostgreSQL variables (automatic)
-var host = Environment.GetEnvironmentVariable("PGHOST");
-var port = Environment.GetEnvironmentVariable("PGPORT");
-var db = Environment.GetEnvironmentVariable("PGDATABASE");
-var user = Environment.GetEnvironmentVariable("PGUSER");
-var password = Environment.GetEnvironmentVariable("PGPASSWORD");
-
-// If Railway variables exist → use them
-if (!string.IsNullOrEmpty(host))
+if (!string.IsNullOrEmpty(databaseUrl))
 {
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':');
+
     connectionString =
-        $"Host={host};Port={port};Database={db};Username={user};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+        $"Host={uri.Host};" +
+        $"Port={uri.Port};" +
+        $"Database={uri.AbsolutePath.Trim('/')};" +
+        $"Username={userInfo[0]};" +
+        $"Password={userInfo[1]};" +
+        $"SSL Mode=Require;" +
+        $"Trust Server Certificate=true";
 }
 else
 {
-    // fallback for local development
-    connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    throw new Exception("DATABASE_URL not found");
 }
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -39,17 +41,32 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 var app = builder.Build();
 
 
-// Auto run migrations safely
+// Wait for DB to be ready (important for Railway)
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.Migrate();
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+    var retries = 10;
+
+    while (retries > 0)
+    {
+        try
+        {
+            db.Database.Migrate();
+            break;
+        }
+        catch
+        {
+            retries--;
+            Thread.Sleep(5000);
+        }
+    }
 }
 
 
-// Railway port binding
-var portEnv = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-app.Urls.Add($"http://0.0.0.0:{portEnv}");
+// Railway port
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Urls.Add($"http://0.0.0.0:{port}");
 
 if (!app.Environment.IsDevelopment())
 {
