@@ -26,7 +26,8 @@ if (!string.IsNullOrEmpty(databaseUrl))
 }
 else
 {
-    throw new Exception("DATABASE_URL not found");
+    // Local PostgreSQL for EF migrations
+    connectionString = "Host=localhost;Port=5432;Database=npiacs;Username=postgres;Password=postgres";
 }
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
