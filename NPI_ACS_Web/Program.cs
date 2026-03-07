@@ -4,13 +4,28 @@ using NPI_ACS_Web.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services
 builder.Services.AddControllersWithViews();
 
-// Railway PostgreSQL connection
-var connectionString =
-    Environment.GetEnvironmentVariable("DATABASE_URL") ??
-    builder.Configuration.GetConnectionString("DefaultConnection");
+string? databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+string connectionString;
+
+if (!string.IsNullOrEmpty(databaseUrl))
+{
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':');
+
+    connectionString =
+        $"Host={uri.Host};" +
+        $"Port={uri.Port};" +
+        $"Database={uri.AbsolutePath.TrimStart('/')};" +
+        $"Username={userInfo[0]};" +
+        $"Password={userInfo[1]};" +
+        $"SSL Mode=Require;Trust Server Certificate=true";
+}
+else
+{
+    connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
+}
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -23,7 +38,6 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 
 var app = builder.Build();
 
-// Railway PORT Fix
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://*:{port}");
 
@@ -47,7 +61,6 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 
-// Auto database migration
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
