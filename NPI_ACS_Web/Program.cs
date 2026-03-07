@@ -6,10 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-// Railway PostgreSQL connection
-var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-
 string connectionString = "";
+
+// Read Railway DATABASE_URL
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 
 if (!string.IsNullOrEmpty(databaseUrl))
 {
@@ -17,7 +17,17 @@ if (!string.IsNullOrEmpty(databaseUrl))
     var userInfo = uri.UserInfo.Split(':');
 
     connectionString =
-        $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.Trim('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+        $"Host={uri.Host};" +
+        $"Port={uri.Port};" +
+        $"Database={uri.AbsolutePath.Trim('/')};" +
+        $"Username={userInfo[0]};" +
+        $"Password={userInfo[1]};" +
+        $"SSL Mode=Require;" +
+        $"Trust Server Certificate=true";
+}
+else
+{
+    throw new Exception("DATABASE_URL environment variable is missing.");
 }
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -32,7 +42,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 var app = builder.Build();
 
 
-// 🚀 AUTO CREATE DATABASE TABLES (VERY IMPORTANT)
+// Auto apply migrations (production safe)
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -40,9 +50,9 @@ using (var scope = app.Services.CreateScope())
 }
 
 
-// Railway PORT
+// Railway port binding
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-app.Urls.Add($"http://*:{port}");
+app.Urls.Add($"http://0.0.0.0:{port}");
 
 if (!app.Environment.IsDevelopment())
 {
