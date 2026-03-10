@@ -36,4 +36,12 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=ACSTasks}/{action=Index}/{id?}");
 
+// Auto create DB tables
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();
+}
+
+
 app.Run();
