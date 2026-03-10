@@ -6,10 +6,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services
 builder.Services.AddControllersWithViews();
 
-// Database
+// =========================
+// DATABASE (Railway + Local)
+// =========================
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                       ?? Environment.GetEnvironmentVariable("DATABASE_URL");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(
-    builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseNpgsql(connectionString));
 
 var app = builder.Build();
 
@@ -22,7 +27,6 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
-
 
 // =========================
 // DEFAULT ROUTE
