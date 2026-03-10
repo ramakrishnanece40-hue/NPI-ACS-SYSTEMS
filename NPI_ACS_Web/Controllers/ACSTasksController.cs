@@ -6,23 +6,20 @@ using OfficeOpenXml;
 
 namespace NPI_ACS_Web.Controllers
 {
-    [Route("ACSTasks")]
     public class ACSTasksController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _environment;
+        private readonly IWebHostEnvironment _env;
 
-        public ACSTasksController(ApplicationDbContext context, IWebHostEnvironment environment)
+        public ACSTasksController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
-            _environment = environment;
+            _env = env;
         }
 
         // ===============================
-        // LIST PAGE
+        // LIST
         // ===============================
-        [HttpGet("")]
-        [HttpGet("Index")]
         public async Task<IActionResult> Index()
         {
             var tasks = await _context.ACSTasks.ToListAsync();
@@ -32,7 +29,6 @@ namespace NPI_ACS_Web.Controllers
         // ===============================
         // CREATE GET
         // ===============================
-        [HttpGet("Create")]
         public IActionResult Create()
         {
             return View();
@@ -41,39 +37,36 @@ namespace NPI_ACS_Web.Controllers
         // ===============================
         // CREATE POST
         // ===============================
-        [HttpPost("Create")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ACSTask task, IFormFile? AttachmentFile)
         {
             try
             {
-                if (ModelState.IsValid)
+                ModelState.Remove("AttachmentPath");
+
+                if (AttachmentFile != null && AttachmentFile.Length > 0)
                 {
-                    if (AttachmentFile != null && AttachmentFile.Length > 0)
+                    string uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+
+                    if (!Directory.Exists(uploads))
+                        Directory.CreateDirectory(uploads);
+
+                    string fileName = Guid.NewGuid() + Path.GetExtension(AttachmentFile.FileName);
+                    string path = Path.Combine(uploads, fileName);
+
+                    using (var stream = new FileStream(path, FileMode.Create))
                     {
-                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-
-                        if (!Directory.Exists(uploadsFolder))
-                            Directory.CreateDirectory(uploadsFolder);
-
-                        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(AttachmentFile.FileName);
-                        var filePath = Path.Combine(uploadsFolder, fileName);
-
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await AttachmentFile.CopyToAsync(stream);
-                        }
-
-                        task.AttachmentPath = "/uploads/" + fileName;
+                        await AttachmentFile.CopyToAsync(stream);
                     }
 
-                    _context.ACSTasks.Add(task);
-                    await _context.SaveChangesAsync();
-
-                    return RedirectToAction(nameof(Index));
+                    task.AttachmentPath = "/uploads/" + fileName;
                 }
 
-                return View(task);
+                _context.Add(task);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
@@ -85,7 +78,6 @@ namespace NPI_ACS_Web.Controllers
         // ===============================
         // EDIT GET
         // ===============================
-        [HttpGet("Edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
             var task = await _context.ACSTasks.FindAsync(id);
@@ -99,84 +91,71 @@ namespace NPI_ACS_Web.Controllers
         // ===============================
         // EDIT POST
         // ===============================
-        [HttpPost("Edit/{id}")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, ACSTask task, IFormFile? AttachmentFile)
         {
             if (id != task.Id)
                 return NotFound();
 
-            var existingTask = await _context.ACSTasks.FindAsync(id);
-
-            if (existingTask == null)
-                return NotFound();
-
             try
             {
-                existingTask.Project = task.Project;
-                existingTask.ODM = task.ODM;
-                existingTask.Product = task.Product;
-                existingTask.Model = task.Model;
-                existingTask.Question = task.Question;
-                existingTask.ActionDetail = task.ActionDetail;
-                existingTask.FourM = task.FourM;
-                existingTask.NeolyncPIC = task.NeolyncPIC;
-                existingTask.CustomerPIC = task.CustomerPIC;
-                existingTask.Priority = task.Priority;
-                existingTask.Status = task.Status;
-                existingTask.StartDate = task.StartDate;
-                existingTask.DueDate = task.DueDate;
-                existingTask.ActualCloseDate = task.ActualCloseDate;
-                existingTask.Remarks = task.Remarks;
+                var existing = await _context.ACSTasks.FindAsync(id);
+
+                if (existing == null)
+                    return NotFound();
+
+                ModelState.Remove("AttachmentPath");
+
+                existing.Project = task.Project;
+                existing.ODM = task.ODM;
+                existing.Product = task.Product;
+                existing.Model = task.Model;
+                existing.Question = task.Question;
+                existing.ActionDetail = task.ActionDetail;
+                existing.FourM = task.FourM;
+                existing.NeolyncPIC = task.NeolyncPIC;
+                existing.CustomerPIC = task.CustomerPIC;
+                existing.Priority = task.Priority;
+                existing.Status = task.Status;
+                existing.StartDate = task.StartDate;
+                existing.DueDate = task.DueDate;
+                existing.ActualCloseDate = task.ActualCloseDate;
+                existing.Remarks = task.Remarks;
 
                 if (AttachmentFile != null && AttachmentFile.Length > 0)
                 {
-                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+                    string uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 
-                    if (!Directory.Exists(uploadsFolder))
-                        Directory.CreateDirectory(uploadsFolder);
+                    if (!Directory.Exists(uploads))
+                        Directory.CreateDirectory(uploads);
 
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(AttachmentFile.FileName);
-                    var filePath = Path.Combine(uploadsFolder, fileName);
+                    string fileName = Guid.NewGuid() + Path.GetExtension(AttachmentFile.FileName);
+                    string path = Path.Combine(uploads, fileName);
 
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    using (var stream = new FileStream(path, FileMode.Create))
                     {
                         await AttachmentFile.CopyToAsync(stream);
                     }
 
-                    existingTask.AttachmentPath = "/uploads/" + fileName;
+                    existing.AttachmentPath = "/uploads/" + fileName;
                 }
 
-                _context.Update(existingTask);
+                _context.Update(existing);
                 await _context.SaveChangesAsync();
 
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("UPDATE ERROR: " + ex.Message);
                 return View(task);
             }
         }
 
         // ===============================
-        // DETAILS
+        // DELETE
         // ===============================
-        [HttpGet("Details/{id}")]
-        public async Task<IActionResult> Details(int id)
-        {
-            var task = await _context.ACSTasks.FindAsync(id);
-
-            if (task == null)
-                return NotFound();
-
-            return View(task);
-        }
-
-        // ===============================
-        // DELETE GET
-        // ===============================
-        [HttpGet("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var task = await _context.ACSTasks.FindAsync(id);
@@ -187,36 +166,23 @@ namespace NPI_ACS_Web.Controllers
             return View(task);
         }
 
-        // ===============================
-        // DELETE POST
-        // ===============================
-        [HttpPost("Delete/{id}")]
-        [ValidateAntiForgeryToken]
+        [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            try
-            {
-                var task = await _context.ACSTasks.FindAsync(id);
+            var task = await _context.ACSTasks.FindAsync(id);
 
-                if (task != null)
-                {
-                    _context.ACSTasks.Remove(task);
-                    await _context.SaveChangesAsync();
-                }
-
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
+            if (task != null)
             {
-                Console.WriteLine(ex.Message);
-                return RedirectToAction(nameof(Index));
+                _context.ACSTasks.Remove(task);
+                await _context.SaveChangesAsync();
             }
+
+            return RedirectToAction(nameof(Index));
         }
 
         // ===============================
         // EXPORT EXCEL
         // ===============================
-        [HttpGet("ExportToExcel")]
         public IActionResult ExportToExcel()
         {
             ExcelPackage.License.SetNonCommercialPersonal("NPI ACS System");
@@ -224,7 +190,7 @@ namespace NPI_ACS_Web.Controllers
             var tasks = _context.ACSTasks.ToList();
 
             using var package = new ExcelPackage();
-            var ws = package.Workbook.Worksheets.Add("ACS Task List");
+            var ws = package.Workbook.Worksheets.Add("ACS Tasks");
 
             ws.Cells[1, 1].Value = "Project";
             ws.Cells[1, 2].Value = "ODM";
@@ -245,24 +211,24 @@ namespace NPI_ACS_Web.Controllers
 
             int row = 2;
 
-            foreach (var item in tasks)
+            foreach (var t in tasks)
             {
-                ws.Cells[row, 1].Value = item.Project;
-                ws.Cells[row, 2].Value = item.ODM;
-                ws.Cells[row, 3].Value = item.Product;
-                ws.Cells[row, 4].Value = item.Model;
-                ws.Cells[row, 5].Value = item.Question;
-                ws.Cells[row, 6].Value = item.ActionDetail;
-                ws.Cells[row, 7].Value = item.FourM;
-                ws.Cells[row, 8].Value = item.NeolyncPIC;
-                ws.Cells[row, 9].Value = item.CustomerPIC;
-                ws.Cells[row, 10].Value = item.Priority;
-                ws.Cells[row, 11].Value = item.Status;
-                ws.Cells[row, 12].Value = item.StartDate;
-                ws.Cells[row, 13].Value = item.DueDate;
-                ws.Cells[row, 14].Value = item.ActualCloseDate;
-                ws.Cells[row, 15].Value = item.Remarks;
-                ws.Cells[row, 16].Value = item.AttachmentPath;
+                ws.Cells[row, 1].Value = t.Project;
+                ws.Cells[row, 2].Value = t.ODM;
+                ws.Cells[row, 3].Value = t.Product;
+                ws.Cells[row, 4].Value = t.Model;
+                ws.Cells[row, 5].Value = t.Question;
+                ws.Cells[row, 6].Value = t.ActionDetail;
+                ws.Cells[row, 7].Value = t.FourM;
+                ws.Cells[row, 8].Value = t.NeolyncPIC;
+                ws.Cells[row, 9].Value = t.CustomerPIC;
+                ws.Cells[row, 10].Value = t.Priority;
+                ws.Cells[row, 11].Value = t.Status;
+                ws.Cells[row, 12].Value = t.StartDate;
+                ws.Cells[row, 13].Value = t.DueDate;
+                ws.Cells[row, 14].Value = t.ActualCloseDate;
+                ws.Cells[row, 15].Value = t.Remarks;
+                ws.Cells[row, 16].Value = t.AttachmentPath;
 
                 row++;
             }
@@ -271,11 +237,9 @@ namespace NPI_ACS_Web.Controllers
 
             var stream = new MemoryStream(package.GetAsByteArray());
 
-            return File(
-                stream,
+            return File(stream,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "ACS_Task_List.xlsx"
-            );
+                "ACS_Tasks.xlsx");
         }
     }
 }
