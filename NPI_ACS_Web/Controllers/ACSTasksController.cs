@@ -15,72 +15,137 @@ namespace NPI_ACS_Web.Controllers
             _context = context;
         }
 
-        // =============================
-        // DASHBOARD
-        // =============================
-
+        // =====================
+        // INDEX
+        // =====================
         public IActionResult Index()
         {
-            var tasks = _context.ACSTasks
-                .OrderByDescending(x => x.Id)
-                .ToList();
-
+            var tasks = _context.ACSTasks.OrderByDescending(x => x.Id).ToList();
             return View(tasks);
         }
 
-        // =============================
-        // CREATE PAGE
-        // =============================
+        // =====================
+        // CREATE
+        // =====================
 
         public IActionResult Create()
         {
             return View();
         }
 
-        // =============================
-        // SAVE TASK
-        // =============================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(ACSTask task, IFormFile Attachment)
+        {
+            if (Attachment != null)
+            {
+                var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+
+                var fileName = Guid.NewGuid() + Path.GetExtension(Attachment.FileName);
+                var path = Path.Combine(folder, fileName);
+
+                using (var stream = new FileStream(path, FileMode.Create))
+                {
+                    await Attachment.CopyToAsync(stream);
+                }
+
+                task.AttachmentPath = "/uploads/" + fileName;
+            }
+
+            _context.Add(task);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // =====================
+        // DETAILS
+        // =====================
+
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var task = await _context.ACSTasks.FirstOrDefaultAsync(m => m.Id == id);
+
+            if (task == null)
+                return NotFound();
+
+            return View(task);
+        }
+
+        // =====================
+        // EDIT
+        // =====================
+
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var task = await _context.ACSTasks.FindAsync(id);
+
+            if (task == null)
+                return NotFound();
+
+            return View(task);
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ACSTask task, IFormFile? Attachment)
+        public async Task<IActionResult> Edit(int id, ACSTask task)
         {
-            try
+            if (id != task.Id)
+                return NotFound();
+
+            if (ModelState.IsValid)
             {
-                if (Attachment != null && Attachment.Length > 0)
-                {
-                    var uploads = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
-
-                    if (!Directory.Exists(uploads))
-                        Directory.CreateDirectory(uploads);
-
-                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(Attachment.FileName);
-
-                    var filePath = Path.Combine(uploads, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await Attachment.CopyToAsync(stream);
-                    }
-
-                    task.AttachmentPath = "/uploads/" + fileName;
-                }
-
-                _context.ACSTasks.Add(task);
+                _context.Update(task);
                 await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
 
-                return RedirectToAction("Index");
-            }
-            catch (Exception ex)
-            {
-                ViewBag.Error = ex.Message;
-                return View(task);
-            }
+            return View(task);
         }
 
-        // =============================
+        // =====================
+        // DELETE
+        // =====================
+
+        public async Task<IActionResult> Delete(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var task = await _context.ACSTasks.FirstOrDefaultAsync(m => m.Id == id);
+
+            if (task == null)
+                return NotFound();
+
+            return View(task);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var task = await _context.ACSTasks.FindAsync(id);
+
+            if (task != null)
+                _context.ACSTasks.Remove(task);
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // =====================
         // EXPORT EXCEL
-        // =============================
+        // =====================
 
         public IActionResult ExportToExcel()
         {
@@ -88,41 +153,44 @@ namespace NPI_ACS_Web.Controllers
 
             var tasks = _context.ACSTasks.ToList();
 
-            using (var package = new ExcelPackage())
+            using var package = new ExcelPackage();
+
+            var sheet = package.Workbook.Worksheets.Add("ACS Tasks");
+
+            sheet.Cells[1, 1].Value = "Project";
+            sheet.Cells[1, 2].Value = "Product";
+            sheet.Cells[1, 3].Value = "Model";
+            sheet.Cells[1, 4].Value = "Question";
+            sheet.Cells[1, 5].Value = "Action Detail";
+            sheet.Cells[1, 6].Value = "4M";
+            sheet.Cells[1, 7].Value = "Neolync PIC";
+            sheet.Cells[1, 8].Value = "Customer PIC";
+            sheet.Cells[1, 9].Value = "Priority";
+            sheet.Cells[1, 10].Value = "Status";
+
+            int row = 2;
+
+            foreach (var t in tasks)
             {
-                var worksheet = package.Workbook.Worksheets.Add("ACS Tasks");
+                sheet.Cells[row, 1].Value = t.Project;
+                sheet.Cells[row, 2].Value = t.Product;
+                sheet.Cells[row, 3].Value = t.Model;
+                sheet.Cells[row, 4].Value = t.Question;
+                sheet.Cells[row, 5].Value = t.ActionDetail;
+                sheet.Cells[row, 6].Value = t.FourM;
+                sheet.Cells[row, 7].Value = t.NeolyncPIC;
+                sheet.Cells[row, 8].Value = t.CustomerPIC;
+                sheet.Cells[row, 9].Value = t.Priority;
+                sheet.Cells[row, 10].Value = t.Status;
 
-                worksheet.Cells[1, 1].Value = "Project";
-                worksheet.Cells[1, 2].Value = "ODM";
-                worksheet.Cells[1, 3].Value = "Priority";
-                worksheet.Cells[1, 4].Value = "Status";
-                worksheet.Cells[1, 5].Value = "Start Date";
-                worksheet.Cells[1, 6].Value = "Due Date";
-                worksheet.Cells[1, 7].Value = "Remarks";
-
-                int row = 2;
-
-                foreach (var task in tasks)
-                {
-                    worksheet.Cells[row, 1].Value = task.Project;
-                    worksheet.Cells[row, 2].Value = task.ODM;
-                    worksheet.Cells[row, 3].Value = task.Priority;
-                    worksheet.Cells[row, 4].Value = task.Status;
-                    worksheet.Cells[row, 5].Value = task.StartDate;
-                    worksheet.Cells[row, 6].Value = task.DueDate;
-                    worksheet.Cells[row, 7].Value = task.Remarks;
-
-                    row++;
-                }
-
-                var stream = new MemoryStream(package.GetAsByteArray());
-
-                return File(
-                    stream,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "ACS_Task_Report.xlsx"
-                );
+                row++;
             }
+
+            var stream = new MemoryStream(package.GetAsByteArray());
+
+            return File(stream,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "ACS_Tasks.xlsx");
         }
     }
 }

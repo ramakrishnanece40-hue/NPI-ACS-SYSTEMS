@@ -9,6 +9,8 @@ namespace NPI_ACS_Web.Models
 
         public string? Project { get; set; }
 
+        public string? ODM { get; set; }
+
         public string? Product { get; set; }
 
         public string? Model { get; set; }
@@ -22,8 +24,6 @@ namespace NPI_ACS_Web.Models
         public string? NeolyncPIC { get; set; }
 
         public string? CustomerPIC { get; set; }
-
-        public string? ODM { get; set; }
 
         public string? Priority { get; set; }
 
