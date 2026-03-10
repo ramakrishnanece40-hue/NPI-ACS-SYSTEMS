@@ -45,34 +45,41 @@ namespace NPI_ACS_Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ACSTask task, IFormFile? AttachmentFile)
         {
-            if (ModelState.IsValid)
+            try
             {
-                if (AttachmentFile != null && AttachmentFile.Length > 0)
+                if (ModelState.IsValid)
                 {
-                    string uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
-
-                    if (!Directory.Exists(uploadsFolder))
-                        Directory.CreateDirectory(uploadsFolder);
-
-                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(AttachmentFile.FileName);
-
-                    string filePath = Path.Combine(uploadsFolder, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    if (AttachmentFile != null && AttachmentFile.Length > 0)
                     {
-                        await AttachmentFile.CopyToAsync(stream);
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+
+                        if (!Directory.Exists(uploadsFolder))
+                            Directory.CreateDirectory(uploadsFolder);
+
+                        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(AttachmentFile.FileName);
+                        var filePath = Path.Combine(uploadsFolder, fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await AttachmentFile.CopyToAsync(stream);
+                        }
+
+                        task.AttachmentPath = "/uploads/" + fileName;
                     }
 
-                    task.AttachmentPath = "/uploads/" + fileName;
+                    _context.ACSTasks.Add(task);
+                    await _context.SaveChangesAsync();
+
+                    return RedirectToAction(nameof(Index));
                 }
 
-                _context.ACSTasks.Add(task);
-                await _context.SaveChangesAsync();
-
-                return RedirectToAction(nameof(Index));
+                return View(task);
             }
-
-            return View(task);
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return View(task);
+            }
         }
 
         // ===============================
@@ -104,7 +111,7 @@ namespace NPI_ACS_Web.Controllers
             if (existingTask == null)
                 return NotFound();
 
-            if (ModelState.IsValid)
+            try
             {
                 existingTask.Project = task.Project;
                 existingTask.ODM = task.ODM;
@@ -124,14 +131,13 @@ namespace NPI_ACS_Web.Controllers
 
                 if (AttachmentFile != null && AttachmentFile.Length > 0)
                 {
-                    string uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 
                     if (!Directory.Exists(uploadsFolder))
                         Directory.CreateDirectory(uploadsFolder);
 
-                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(AttachmentFile.FileName);
-
-                    string filePath = Path.Combine(uploadsFolder, fileName);
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(AttachmentFile.FileName);
+                    var filePath = Path.Combine(uploadsFolder, fileName);
 
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
@@ -146,8 +152,11 @@ namespace NPI_ACS_Web.Controllers
 
                 return RedirectToAction(nameof(Index));
             }
-
-            return View(task);
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return View(task);
+            }
         }
 
         // ===============================
@@ -185,15 +194,23 @@ namespace NPI_ACS_Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var task = await _context.ACSTasks.FindAsync(id);
-
-            if (task != null)
+            try
             {
-                _context.ACSTasks.Remove(task);
-                await _context.SaveChangesAsync();
-            }
+                var task = await _context.ACSTasks.FindAsync(id);
 
-            return RedirectToAction(nameof(Index));
+                if (task != null)
+                {
+                    _context.ACSTasks.Remove(task);
+                    await _context.SaveChangesAsync();
+                }
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         // ===============================
