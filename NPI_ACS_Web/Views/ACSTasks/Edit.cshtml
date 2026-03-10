@@ -2,7 +2,9 @@
 
 <h2>Edit Task</h2>
 
-<form asp-action="Edit" enctype="multipart/form-data">
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+
+@Html.AntiForgeryToken()
 
 <input type="hidden" asp-for="Id" />
 
@@ -79,8 +81,6 @@
 <input asp-for="DueDate" type="date" class="form-control"/>
 </div>
 
-<!-- FIXED PART -->
-
 <div class="form-group">
 <label>Actual Close Date</label>
 <input asp-for="ActualCloseDate" type="date" class="form-control"/>
@@ -107,7 +107,7 @@ Current File:
 
 <br/>
 
-<button class="btn btn-primary">Update</button>
+<button type="submit" class="btn btn-primary">Update</button>
 <a asp-action="Index" class="btn btn-secondary">Back</a>
 
 </form>
