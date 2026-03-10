@@ -21,7 +21,10 @@ namespace NPI_ACS_Web.Controllers
 
         public IActionResult Index()
         {
-            var tasks = _context.ACSTasks.OrderByDescending(x => x.Id).ToList();
+            var tasks = _context.ACSTasks
+                .OrderByDescending(x => x.Id)
+                .ToList();
+
             return View(tasks);
         }
 
@@ -40,7 +43,7 @@ namespace NPI_ACS_Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ACSTask task, IFormFile Attachment)
+        public async Task<IActionResult> Create(ACSTask task, IFormFile? Attachment)
         {
             try
             {
@@ -52,6 +55,7 @@ namespace NPI_ACS_Web.Controllers
                         Directory.CreateDirectory(uploads);
 
                     var fileName = Guid.NewGuid().ToString() + Path.GetExtension(Attachment.FileName);
+
                     var filePath = Path.Combine(uploads, fileName);
 
                     using (var stream = new FileStream(filePath, FileMode.Create))
@@ -62,10 +66,10 @@ namespace NPI_ACS_Web.Controllers
                     task.AttachmentPath = "/uploads/" + fileName;
                 }
 
-                _context.Add(task);
+                _context.ACSTasks.Add(task);
                 await _context.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
@@ -107,14 +111,17 @@ namespace NPI_ACS_Web.Controllers
                     worksheet.Cells[row, 5].Value = task.StartDate;
                     worksheet.Cells[row, 6].Value = task.DueDate;
                     worksheet.Cells[row, 7].Value = task.Remarks;
+
                     row++;
                 }
 
                 var stream = new MemoryStream(package.GetAsByteArray());
 
-                return File(stream,
+                return File(
+                    stream,
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "ACS_Task_Report.xlsx");
+                    "ACS_Task_Report.xlsx"
+                );
             }
         }
     }
