@@ -18,7 +18,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 var app = builder.Build();
 
-// Error handling
+// =========================
+// ERROR HANDLING
+// =========================
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -36,12 +39,21 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=ACSTasks}/{action=Index}/{id?}");
 
-// Auto create DB tables
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
-}
+// =========================
+// AUTO DATABASE MIGRATION
+// =========================
 
+try
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        db.Database.Migrate();
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine("Database migration failed: " + ex.Message);
+}
 
 app.Run();
