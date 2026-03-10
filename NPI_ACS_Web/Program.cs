@@ -3,46 +3,62 @@ using NPI_ACS_Web.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services
+// =============================
+// Add MVC Services
+// =============================
 builder.Services.AddControllersWithViews();
 
-// =========================
-// DATABASE (Railway + Local)
-// =========================
+// =============================
+// DATABASE CONNECTION
+// =============================
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-                       ?? Environment.GetEnvironmentVariable("DATABASE_URL");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// Railway DATABASE_URL support
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+
+if (!string.IsNullOrEmpty(databaseUrl))
+{
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':');
+
+    connectionString =
+        $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.Trim('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+}
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+// =============================
+// BUILD APP
+// =============================
 var app = builder.Build();
 
-// =========================
+// =============================
 // ERROR HANDLING
-// =========================
-
+// =============================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
 }
 
+// =============================
+// MIDDLEWARE
+// =============================
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
 
-// =========================
-// DEFAULT ROUTE
-// =========================
-
+// =============================
+// ROUTES
+// =============================
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=ACSTasks}/{action=Index}/{id?}");
 
-// =========================
-// AUTO DATABASE MIGRATION
-// =========================
-
+// =============================
+// DATABASE MIGRATION (SAFE)
+// =============================
 try
 {
     using (var scope = app.Services.CreateScope())
@@ -53,7 +69,8 @@ try
 }
 catch (Exception ex)
 {
-    Console.WriteLine("Database migration failed: " + ex.Message);
+    Console.WriteLine("Migration error: " + ex.Message);
 }
 
+// =============================
 app.Run();
