@@ -17,26 +17,26 @@ namespace NPI_ACS_Web.Controllers
             _env = env;
         }
 
-        // ===============================
+        // ======================
         // LIST
-        // ===============================
+        // ======================
         public async Task<IActionResult> Index()
         {
             var tasks = await _context.ACSTasks.ToListAsync();
             return View(tasks);
         }
 
-        // ===============================
+        // ======================
         // CREATE GET
-        // ===============================
+        // ======================
         public IActionResult Create()
         {
             return View();
         }
 
-        // ===============================
+        // ======================
         // CREATE POST
-        // ===============================
+        // ======================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ACSTask task, IFormFile? AttachmentFile)
@@ -63,10 +63,10 @@ namespace NPI_ACS_Web.Controllers
                     task.AttachmentPath = "/uploads/" + fileName;
                 }
 
-                _context.Add(task);
+                _context.ACSTasks.Add(task);
                 await _context.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
@@ -75,9 +75,9 @@ namespace NPI_ACS_Web.Controllers
             }
         }
 
-        // ===============================
+        // ======================
         // EDIT GET
-        // ===============================
+        // ======================
         public async Task<IActionResult> Edit(int id)
         {
             var task = await _context.ACSTasks.FindAsync(id);
@@ -88,9 +88,9 @@ namespace NPI_ACS_Web.Controllers
             return View(task);
         }
 
-        // ===============================
+        // ======================
         // EDIT POST
-        // ===============================
+        // ======================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, ACSTask task, IFormFile? AttachmentFile)
@@ -144,18 +144,18 @@ namespace NPI_ACS_Web.Controllers
                 _context.Update(existing);
                 await _context.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("UPDATE ERROR: " + ex.Message);
+                Console.WriteLine(ex.Message);
                 return View(task);
             }
         }
 
-        // ===============================
+        // ======================
         // DELETE
-        // ===============================
+        // ======================
         public async Task<IActionResult> Delete(int id)
         {
             var task = await _context.ACSTasks.FindAsync(id);
@@ -177,15 +177,15 @@ namespace NPI_ACS_Web.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index");
         }
 
-        // ===============================
+        // ======================
         // EXPORT EXCEL
-        // ===============================
+        // ======================
         public IActionResult ExportToExcel()
         {
-            ExcelPackage.License.SetNonCommercialPersonal("NPI ACS System");
+            ExcelPackage.License.SetNonCommercialPersonal("NPI ACS");
 
             var tasks = _context.ACSTasks.ToList();
 
