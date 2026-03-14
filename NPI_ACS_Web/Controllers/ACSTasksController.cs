@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using NPI_ACS_Web.Data;
 using NPI_ACS_Web.Models;
 using OfficeOpenXml;
@@ -27,9 +28,9 @@ namespace NPI_ACS_Web.Controllers
         // =====================
         // CREATE
         // =====================
-
         public IActionResult Create()
         {
+            LoadDropdowns();
             return View();
         }
 
@@ -37,34 +38,59 @@ namespace NPI_ACS_Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ACSTask task, IFormFile Attachment)
         {
-            if (Attachment != null)
+            if (ModelState.IsValid)
             {
-                var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
-
-                if (!Directory.Exists(folder))
-                    Directory.CreateDirectory(folder);
-
-                var fileName = Guid.NewGuid() + Path.GetExtension(Attachment.FileName);
-                var path = Path.Combine(folder, fileName);
-
-                using (var stream = new FileStream(path, FileMode.Create))
+                if (Attachment != null)
                 {
-                    await Attachment.CopyToAsync(stream);
+                    var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+
+                    if (!Directory.Exists(folder))
+                        Directory.CreateDirectory(folder);
+
+                    var fileName = Guid.NewGuid() + Path.GetExtension(Attachment.FileName);
+                    var path = Path.Combine(folder, fileName);
+
+                    using (var stream = new FileStream(path, FileMode.Create))
+                    {
+                        await Attachment.CopyToAsync(stream);
+                    }
+
+                    task.AttachmentPath = "/uploads/" + fileName;
                 }
 
-                task.AttachmentPath = "/uploads/" + fileName;
+                _context.Add(task);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Index));
             }
 
-            _context.Add(task);
-            await _context.SaveChangesAsync();
+            LoadDropdowns();
+            return View(task);
+        }
 
-            return RedirectToAction(nameof(Index));
+        // =====================
+        // DROPDOWN LIST
+        // =====================
+        private void LoadDropdowns()
+        {
+            ViewBag.PriorityList = new List<SelectListItem>
+            {
+                new SelectListItem{ Value="High", Text="High"},
+                new SelectListItem{ Value="Medium", Text="Medium"},
+                new SelectListItem{ Value="Low", Text="Low"}
+            };
+
+            ViewBag.StatusList = new List<SelectListItem>
+            {
+                new SelectListItem{ Value="Open", Text="Open"},
+                new SelectListItem{ Value="In Progress", Text="In Progress"},
+                new SelectListItem{ Value="Closed", Text="Closed"}
+            };
         }
 
         // =====================
         // DETAILS
         // =====================
-
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -81,7 +107,6 @@ namespace NPI_ACS_Web.Controllers
         // =====================
         // EDIT
         // =====================
-
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -92,6 +117,7 @@ namespace NPI_ACS_Web.Controllers
             if (task == null)
                 return NotFound();
 
+            LoadDropdowns();
             return View(task);
         }
 
@@ -109,13 +135,13 @@ namespace NPI_ACS_Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            LoadDropdowns();
             return View(task);
         }
 
         // =====================
         // DELETE
         // =====================
-
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -146,7 +172,6 @@ namespace NPI_ACS_Web.Controllers
         // =====================
         // EXPORT EXCEL
         // =====================
-
         public IActionResult ExportToExcel()
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;

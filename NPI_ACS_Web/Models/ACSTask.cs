@@ -29,13 +29,10 @@ namespace NPI_ACS_Web.Models
 
         public string? Status { get; set; }
 
-        [DataType(DataType.Date)]
         public DateTime? StartDate { get; set; }
 
-        [DataType(DataType.Date)]
         public DateTime? DueDate { get; set; }
 
-        [DataType(DataType.Date)]
         public DateTime? ActualCloseDate { get; set; }
 
         public string? Remarks { get; set; }
