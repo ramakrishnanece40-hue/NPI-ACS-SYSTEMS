@@ -163,7 +163,7 @@ private readonly ApplicationDbContext _context;
     {
         try
         {
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            
 
             var tasks = _context.ACSTasks.ToList();
 

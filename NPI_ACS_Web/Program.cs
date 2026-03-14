@@ -5,7 +5,7 @@ using OfficeOpenXml;
 var builder = WebApplication.CreateBuilder(args);
 
 // =============================
-// EPPLUS LICENSE (EPPlus 8 FIX)
+// EPPLUS LICENSE (REQUIRED FOR VERSION 8)
 // =============================
 ExcelPackage.License.SetNonCommercialPersonal("NPI ACS System");
 
@@ -17,7 +17,6 @@ builder.Services.AddControllersWithViews();
 // =============================
 // DATABASE CONNECTION
 // =============================
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Railway DATABASE_URL support
@@ -27,6 +26,8 @@ if (!string.IsNullOrEmpty(databaseUrl))
 {
 var uri = new Uri(databaseUrl);
 var userInfo = uri.UserInfo.Split(':');
+
+
 connectionString =
     $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.Trim('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
 
@@ -64,7 +65,7 @@ name: "default",
 pattern: "{controller=ACSTasks}/{action=Index}/{id?}");
 
 // =============================
-// DATABASE MIGRATION (SAFE)
+// DATABASE MIGRATION
 // =============================
 try
 {
@@ -79,5 +80,4 @@ catch (Exception ex)
 Console.WriteLine("Migration error: " + ex.Message);
 }
 
-// =============================
 app.Run();
