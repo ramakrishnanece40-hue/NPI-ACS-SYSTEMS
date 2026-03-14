@@ -61,9 +61,11 @@
 <tbody>
 
 @{
+var today = DateOnly.FromDateTime(DateTime.Today);
+
 var overdueTasks = Model
 .Where(x => x.DueDate.HasValue
-&& x.DueDate.Value.Date < DateTime.Today
+&& x.DueDate.Value < today
 && x.Status != null
 && x.Status.ToLower() != "closed")
 .ToList();
@@ -71,6 +73,7 @@ var overdueTasks = Model
 
 @if (!overdueTasks.Any())
 {
+
 <tr>
 <td colspan="5" class="text-center">No overdue tasks</td>
 </tr>
@@ -78,6 +81,7 @@ var overdueTasks = Model
 
 @foreach (var task in overdueTasks)
 {
+
 <tr class="table-danger">
 <td>@task.Project</td>
 <td>@task.Model</td>
