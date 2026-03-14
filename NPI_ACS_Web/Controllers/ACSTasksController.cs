@@ -163,8 +163,6 @@ private readonly ApplicationDbContext _context;
     {
         try
         {
-            
-
             var tasks = _context.ACSTasks.ToList();
 
             using var package = new ExcelPackage();
@@ -177,6 +175,7 @@ private readonly ApplicationDbContext _context;
                 "StartDate","DueDate","ActualCloseDate","Remarks","Attachment"
             };
 
+            // HEADER STYLE
             for (int i = 0; i < headers.Length; i++)
             {
                 sheet.Cells[1, i + 1].Value = headers[i];
@@ -199,26 +198,46 @@ private readonly ApplicationDbContext _context;
                 sheet.Cells[row,8].Value = t.NeolyncPIC;
                 sheet.Cells[row,9].Value = t.CustomerPIC;
                 sheet.Cells[row,10].Value = t.Priority;
-                sheet.Cells[row,11].Value = t.Status;
+
+                // STATUS COLOR FIX
+                var statusCell = sheet.Cells[row,11];
+                statusCell.Style.Fill.PatternType = ExcelFillStyle.None;
+                statusCell.Value = t.Status;
+
+                if (t.Status == "Open")
+                {
+                    statusCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    statusCell.Style.Fill.BackgroundColor.SetColor(Color.LightCoral);
+                }
+                else if (t.Status == "In Progress")
+                {
+                    statusCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    statusCell.Style.Fill.BackgroundColor.SetColor(Color.LightYellow);
+                }
+                else if (t.Status == "Closed")
+                {
+                    statusCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    statusCell.Style.Fill.BackgroundColor.SetColor(Color.LightGreen);
+                }
+
+                // DATE FORMAT FIX
                 sheet.Cells[row,12].Value = t.StartDate;
                 sheet.Cells[row,13].Value = t.DueDate;
                 sheet.Cells[row,14].Value = t.ActualCloseDate;
+
+                sheet.Cells[row,12].Style.Numberformat.Format = "yyyy-MM-dd";
+                sheet.Cells[row,13].Style.Numberformat.Format = "yyyy-MM-dd";
+                sheet.Cells[row,14].Style.Numberformat.Format = "yyyy-MM-dd";
+
                 sheet.Cells[row,15].Value = t.Remarks;
                 sheet.Cells[row,16].Value = t.AttachmentPath;
 
-                sheet.Cells[row,11].Style.Fill.PatternType = ExcelFillStyle.Solid;
-
-                if (t.Status == "Open")
-                    sheet.Cells[row,11].Style.Fill.BackgroundColor.SetColor(Color.Red);
-
-                else if (t.Status == "In Progress")
-                    sheet.Cells[row,11].Style.Fill.BackgroundColor.SetColor(Color.Yellow);
-
-                else if (t.Status == "Closed")
-                    sheet.Cells[row,11].Style.Fill.BackgroundColor.SetColor(Color.LightGreen);
-
                 row++;
             }
+
+            // FILTER + FREEZE HEADER
+            sheet.Cells["A1:P1"].AutoFilter = true;
+            sheet.View.FreezePanes(2,1);
 
             sheet.Cells.AutoFitColumns();
 
