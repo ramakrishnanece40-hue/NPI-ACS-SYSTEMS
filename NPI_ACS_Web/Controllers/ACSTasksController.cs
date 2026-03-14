@@ -13,10 +13,11 @@ public class ACSTasksController : Controller
 {
 private readonly ApplicationDbContext _context;
 
-
     public ACSTasksController(ApplicationDbContext context)
     {
         _context = context;
+
+        // EPPlus License (VERY IMPORTANT)
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
     }
 
@@ -171,10 +172,9 @@ private readonly ApplicationDbContext _context;
         {
             "Project","ODM","Product","Model","Question","Action Detail","4M",
             "Neolync PIC","Customer PIC","Priority","Status",
-            "StartDate","DueDate","ActualCloseDate","Remarks","Attachment"
+            "Start Date","Due Date","Actual Close Date","Remarks","Attachment"
         };
 
-        // HEADER STYLE
         for (int i = 0; i < headers.Length; i++)
         {
             sheet.Cells[1, i + 1].Value = headers[i];
@@ -204,22 +204,16 @@ private readonly ApplicationDbContext _context;
             sheet.Cells[row,15].Value = t.Remarks;
             sheet.Cells[row,16].Value = t.AttachmentPath;
 
-            // STATUS COLOR
-            if (!string.IsNullOrEmpty(t.Status))
-            {
-                var status = t.Status.ToLower();
+            sheet.Cells[row,11].Style.Fill.PatternType = ExcelFillStyle.Solid;
 
-                sheet.Cells[row,11].Style.Fill.PatternType = ExcelFillStyle.Solid;
+            if (t.Status == "Open")
+                sheet.Cells[row,11].Style.Fill.BackgroundColor.SetColor(Color.Red);
 
-                if (status == "open")
-                    sheet.Cells[row,11].Style.Fill.BackgroundColor.SetColor(Color.Red);
+            if (t.Status == "In Progress")
+                sheet.Cells[row,11].Style.Fill.BackgroundColor.SetColor(Color.Yellow);
 
-                else if (status == "in progress")
-                    sheet.Cells[row,11].Style.Fill.BackgroundColor.SetColor(Color.Yellow);
-
-                else if (status == "closed")
-                    sheet.Cells[row,11].Style.Fill.BackgroundColor.SetColor(Color.LightGreen);
-            }
+            if (t.Status == "Closed")
+                sheet.Cells[row,11].Style.Fill.BackgroundColor.SetColor(Color.LightGreen);
 
             row++;
         }
