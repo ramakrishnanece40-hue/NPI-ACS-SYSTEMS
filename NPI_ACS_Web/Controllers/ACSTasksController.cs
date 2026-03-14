@@ -34,39 +34,41 @@ namespace NPI_ACS_Web.Controllers
             return View();
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ACSTask task, IFormFile Attachment)
+       [HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Create(ACSTask task, IFormFile? Attachment)
+{
+    if (ModelState.IsValid)
+    {
+        // Attachment is OPTIONAL
+        if (Attachment != null && Attachment.Length > 0)
         {
-            if (ModelState.IsValid)
+            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(Attachment.FileName);
+            var path = Path.Combine(folder, fileName);
+
+            using (var stream = new FileStream(path, FileMode.Create))
             {
-                if (Attachment != null)
-                {
-                    var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
-
-                    if (!Directory.Exists(folder))
-                        Directory.CreateDirectory(folder);
-
-                    var fileName = Guid.NewGuid() + Path.GetExtension(Attachment.FileName);
-                    var path = Path.Combine(folder, fileName);
-
-                    using (var stream = new FileStream(path, FileMode.Create))
-                    {
-                        await Attachment.CopyToAsync(stream);
-                    }
-
-                    task.AttachmentPath = "/uploads/" + fileName;
-                }
-
-                _context.Add(task);
-                await _context.SaveChangesAsync();
-
-                return RedirectToAction(nameof(Index));
+                await Attachment.CopyToAsync(stream);
             }
 
-            LoadDropdowns();
-            return View(task);
+            task.AttachmentPath = "/uploads/" + fileName;
         }
+
+        // Save task even if no file uploaded
+        _context.ACSTasks.Add(task);
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Index));
+    }
+
+    LoadDropdowns();
+    return View(task);
+}
 
         // =====================
         // DROPDOWN LIST
