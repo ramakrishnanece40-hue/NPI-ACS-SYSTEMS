@@ -33,48 +33,40 @@ namespace NPI_ACS_Web.Controllers
             LoadDropdowns();
             return View();
         }
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> Create(ACSTask task, IFormFile? Attachment)
-{
-    try
-    {
-        if (ModelState.IsValid)
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(ACSTask task, IFormFile? Attachment)
         {
-            // FILE IS OPTIONAL
-            if (Attachment != null && Attachment.Length > 0)
+            try
             {
-                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-
-                if (!Directory.Exists(uploadPath))
-                    Directory.CreateDirectory(uploadPath);
-
-                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(Attachment.FileName);
-                var filePath = Path.Combine(uploadPath, fileName);
-
-                using (var stream = new FileStream(filePath, FileMode.Create))
+                if (Attachment != null && Attachment.Length > 0)
                 {
+                    var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
+
+                    if (!Directory.Exists(uploadPath))
+                        Directory.CreateDirectory(uploadPath);
+
+                    var fileName = Guid.NewGuid() + Path.GetExtension(Attachment.FileName);
+                    var path = Path.Combine(uploadPath, fileName);
+
+                    using var stream = new FileStream(path, FileMode.Create);
                     await Attachment.CopyToAsync(stream);
+
+                    task.AttachmentPath = "/uploads/" + fileName;
                 }
 
-                task.AttachmentPath = "/uploads/" + fileName;
+                _context.ACSTasks.Add(task);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Index));
             }
-
-            // SAVE TASK
-            _context.ACSTasks.Add(task);
-            await _context.SaveChangesAsync();
-
-            return RedirectToAction(nameof(Index));
+            catch (Exception ex)
+            {
+                var message = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return Content("DATABASE ERROR: " + message);
+            }
         }
-
-        LoadDropdowns();
-        return View(task);
-    }
-    catch (Exception ex)
-    {
-        return Content("ERROR: " + ex.Message);
-    }
-}
 
         // =====================
         // DROPDOWN LIST
@@ -136,11 +128,19 @@ public async Task<IActionResult> Create(ACSTask task, IFormFile? Attachment)
             if (id != task.Id)
                 return NotFound();
 
-            if (ModelState.IsValid)
+            try
             {
-                _context.Update(task);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                if (ModelState.IsValid)
+                {
+                    _context.Update(task);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            catch (Exception ex)
+            {
+                var message = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return Content("DATABASE ERROR: " + message);
             }
 
             LoadDropdowns();
