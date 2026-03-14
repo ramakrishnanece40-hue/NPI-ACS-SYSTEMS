@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using NPI_ACS_Web.Data;
 using NPI_ACS_Web.Models;
-using OfficeOpenXml;
 using System.Text;
 
 namespace NPI_ACS_Web.Controllers
@@ -16,9 +15,6 @@ private readonly ApplicationDbContext _context;
     public ACSTasksController(ApplicationDbContext context)
     {
         _context = context;
-
-        // EPPlus license initialization (important for Railway)
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
     }
 
     // =====================
@@ -74,7 +70,7 @@ private readonly ApplicationDbContext _context;
     }
 
     // =====================
-    // DROPDOWN LIST
+    // DROPDOWNS
     // =====================
     private void LoadDropdowns()
     {
@@ -183,52 +179,26 @@ private readonly ApplicationDbContext _context;
     }
 
     // =====================
-    // EXPORT EXCEL
+    // EXPORT TO EXCEL (CSV FORMAT)
     // =====================
     public IActionResult ExportToExcel()
     {
         var tasks = _context.ACSTasks.ToList();
 
-        using var package = new ExcelPackage();
+        var builder = new StringBuilder();
 
-        var sheet = package.Workbook.Worksheets.Add("ACS Tasks");
-
-        sheet.Cells[1, 1].Value = "Project";
-        sheet.Cells[1, 2].Value = "ODM";
-        sheet.Cells[1, 3].Value = "Product";
-        sheet.Cells[1, 4].Value = "Model";
-        sheet.Cells[1, 5].Value = "Question";
-        sheet.Cells[1, 6].Value = "Action Detail";
-        sheet.Cells[1, 7].Value = "4M";
-        sheet.Cells[1, 8].Value = "Neolync PIC";
-        sheet.Cells[1, 9].Value = "Customer PIC";
-        sheet.Cells[1,10].Value = "Priority";
-        sheet.Cells[1,11].Value = "Status";
-
-        int row = 2;
+        builder.AppendLine("Project,ODM,Product,Model,Question,Action Detail,4M,Neolync PIC,Customer PIC,Priority,Status");
 
         foreach (var t in tasks)
         {
-            sheet.Cells[row,1].Value = t.Project;
-            sheet.Cells[row,2].Value = t.ODM;
-            sheet.Cells[row,3].Value = t.Product;
-            sheet.Cells[row,4].Value = t.Model;
-            sheet.Cells[row,5].Value = t.Question;
-            sheet.Cells[row,6].Value = t.ActionDetail;
-            sheet.Cells[row,7].Value = t.FourM;
-            sheet.Cells[row,8].Value = t.NeolyncPIC;
-            sheet.Cells[row,9].Value = t.CustomerPIC;
-            sheet.Cells[row,10].Value = t.Priority;
-            sheet.Cells[row,11].Value = t.Status;
-
-            row++;
+            builder.AppendLine($"{t.Project},{t.ODM},{t.Product},{t.Model},{t.Question},{t.ActionDetail},{t.FourM},{t.NeolyncPIC},{t.CustomerPIC},{t.Priority},{t.Status}");
         }
 
-        var stream = new MemoryStream(package.GetAsByteArray());
-
-        return File(stream,
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "ACS_Tasks.xlsx");
+        return File(
+            Encoding.UTF8.GetBytes(builder.ToString()),
+            "text/csv",
+            "ACS_Tasks.csv"
+        );
     }
 }
 
