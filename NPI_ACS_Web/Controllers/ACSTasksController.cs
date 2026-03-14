@@ -3,16 +3,21 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using NPI_ACS_Web.Data;
 using NPI_ACS_Web.Models;
-using System.Text;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
+using System.Drawing;
 
 namespace NPI_ACS_Web.Controllers
 {
 public class ACSTasksController : Controller
 {
 private readonly ApplicationDbContext _context;
+
+
     public ACSTasksController(ApplicationDbContext context)
     {
         _context = context;
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
     }
 
     // INDEX
@@ -154,24 +159,78 @@ private readonly ApplicationDbContext _context;
         return RedirectToAction(nameof(Index));
     }
 
-    // EXPORT (Excel-compatible CSV)
+    // EXPORT TO EXCEL
     public IActionResult ExportToExcel()
     {
         var tasks = _context.ACSTasks.ToList();
-        var builder = new StringBuilder();
 
-        builder.AppendLine("Project,ODM,Product,Model,Question,Action Detail,4M,Neolync PIC,Customer PIC,Priority,Status,StartDate,DueDate,ActualCloseDate,Remarks,Attachment");
+        using var package = new ExcelPackage();
+        var sheet = package.Workbook.Worksheets.Add("ACS Tasks");
+
+        string[] headers =
+        {
+            "Project","ODM","Product","Model","Question","Action Detail","4M",
+            "Neolync PIC","Customer PIC","Priority","Status",
+            "StartDate","DueDate","ActualCloseDate","Remarks","Attachment"
+        };
+
+        // HEADER STYLE
+        for (int i = 0; i < headers.Length; i++)
+        {
+            sheet.Cells[1, i + 1].Value = headers[i];
+            sheet.Cells[1, i + 1].Style.Font.Bold = true;
+            sheet.Cells[1, i + 1].Style.Fill.PatternType = ExcelFillStyle.Solid;
+            sheet.Cells[1, i + 1].Style.Fill.BackgroundColor.SetColor(Color.LightBlue);
+        }
+
+        int row = 2;
 
         foreach (var t in tasks)
         {
-            builder.AppendLine($"{t.Project},{t.ODM},{t.Product},{t.Model},{t.Question},{t.ActionDetail},{t.FourM},{t.NeolyncPIC},{t.CustomerPIC},{t.Priority},{t.Status},{t.StartDate},{t.DueDate},{t.ActualCloseDate},{t.Remarks},{t.AttachmentPath}");
+            sheet.Cells[row,1].Value = t.Project;
+            sheet.Cells[row,2].Value = t.ODM;
+            sheet.Cells[row,3].Value = t.Product;
+            sheet.Cells[row,4].Value = t.Model;
+            sheet.Cells[row,5].Value = t.Question;
+            sheet.Cells[row,6].Value = t.ActionDetail;
+            sheet.Cells[row,7].Value = t.FourM;
+            sheet.Cells[row,8].Value = t.NeolyncPIC;
+            sheet.Cells[row,9].Value = t.CustomerPIC;
+            sheet.Cells[row,10].Value = t.Priority;
+            sheet.Cells[row,11].Value = t.Status;
+            sheet.Cells[row,12].Value = t.StartDate;
+            sheet.Cells[row,13].Value = t.DueDate;
+            sheet.Cells[row,14].Value = t.ActualCloseDate;
+            sheet.Cells[row,15].Value = t.Remarks;
+            sheet.Cells[row,16].Value = t.AttachmentPath;
+
+            // STATUS COLOR
+            if (!string.IsNullOrEmpty(t.Status))
+            {
+                var status = t.Status.ToLower();
+
+                sheet.Cells[row,11].Style.Fill.PatternType = ExcelFillStyle.Solid;
+
+                if (status == "open")
+                    sheet.Cells[row,11].Style.Fill.BackgroundColor.SetColor(Color.Red);
+
+                else if (status == "in progress")
+                    sheet.Cells[row,11].Style.Fill.BackgroundColor.SetColor(Color.Yellow);
+
+                else if (status == "closed")
+                    sheet.Cells[row,11].Style.Fill.BackgroundColor.SetColor(Color.LightGreen);
+            }
+
+            row++;
         }
 
-        return File(
-            Encoding.UTF8.GetBytes(builder.ToString()),
-            "text/csv",
-            "ACS_Tasks.csv"
-        );
+        sheet.Cells.AutoFitColumns();
+
+        var stream = new MemoryStream(package.GetAsByteArray());
+
+        return File(stream,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "ACS_Tasks.xlsx");
     }
 }
 
