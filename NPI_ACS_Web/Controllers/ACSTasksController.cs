@@ -4,15 +4,21 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using NPI_ACS_Web.Data;
 using NPI_ACS_Web.Models;
 using OfficeOpenXml;
+using System.Text;
 
 namespace NPI_ACS_Web.Controllers
 {
 public class ACSTasksController : Controller
 {
 private readonly ApplicationDbContext _context;
+
+
     public ACSTasksController(ApplicationDbContext context)
     {
         _context = context;
+
+        // EPPlus license initialization (important for Railway)
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
     }
 
     // =====================
@@ -177,12 +183,10 @@ private readonly ApplicationDbContext _context;
     }
 
     // =====================
-    // EXPORT EXCEL (WORKING VERSION)
+    // EXPORT EXCEL
     // =====================
     public IActionResult ExportToExcel()
     {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-
         var tasks = _context.ACSTasks.ToList();
 
         using var package = new ExcelPackage();
@@ -198,24 +202,24 @@ private readonly ApplicationDbContext _context;
         sheet.Cells[1, 7].Value = "4M";
         sheet.Cells[1, 8].Value = "Neolync PIC";
         sheet.Cells[1, 9].Value = "Customer PIC";
-        sheet.Cells[1, 10].Value = "Priority";
-        sheet.Cells[1, 11].Value = "Status";
+        sheet.Cells[1,10].Value = "Priority";
+        sheet.Cells[1,11].Value = "Status";
 
         int row = 2;
 
         foreach (var t in tasks)
         {
-            sheet.Cells[row, 1].Value = t.Project;
-            sheet.Cells[row, 2].Value = t.ODM;
-            sheet.Cells[row, 3].Value = t.Product;
-            sheet.Cells[row, 4].Value = t.Model;
-            sheet.Cells[row, 5].Value = t.Question;
-            sheet.Cells[row, 6].Value = t.ActionDetail;
-            sheet.Cells[row, 7].Value = t.FourM;
-            sheet.Cells[row, 8].Value = t.NeolyncPIC;
-            sheet.Cells[row, 9].Value = t.CustomerPIC;
-            sheet.Cells[row, 10].Value = t.Priority;
-            sheet.Cells[row, 11].Value = t.Status;
+            sheet.Cells[row,1].Value = t.Project;
+            sheet.Cells[row,2].Value = t.ODM;
+            sheet.Cells[row,3].Value = t.Product;
+            sheet.Cells[row,4].Value = t.Model;
+            sheet.Cells[row,5].Value = t.Question;
+            sheet.Cells[row,6].Value = t.ActionDetail;
+            sheet.Cells[row,7].Value = t.FourM;
+            sheet.Cells[row,8].Value = t.NeolyncPIC;
+            sheet.Cells[row,9].Value = t.CustomerPIC;
+            sheet.Cells[row,10].Value = t.Priority;
+            sheet.Cells[row,11].Value = t.Status;
 
             row++;
         }
