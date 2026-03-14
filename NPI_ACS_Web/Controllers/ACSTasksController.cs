@@ -199,26 +199,26 @@ private readonly ApplicationDbContext _context;
                 sheet.Cells[row,9].Value = t.CustomerPIC;
                 sheet.Cells[row,10].Value = t.Priority;
 
-                // STATUS COLOR FIX
-                var statusCell = sheet.Cells[row,11];
-                statusCell.Style.Fill.PatternType = ExcelFillStyle.None;
-                statusCell.Value = t.Status;
+               // STATUS COLOR FIX
+var statusCell = sheet.Cells[row,11];
+statusCell.Style.Fill.PatternType = ExcelFillStyle.None;
+statusCell.Value = t.Status;
 
-                if (t.Status == "Open")
-                {
-                    statusCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    statusCell.Style.Fill.BackgroundColor.SetColor(Color.LightCoral);
-                }
-                else if (t.Status == "In Progress")
-                {
-                    statusCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    statusCell.Style.Fill.BackgroundColor.SetColor(Color.LightYellow);
-                }
-                else if (t.Status == "Closed")
-                {
-                    statusCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    statusCell.Style.Fill.BackgroundColor.SetColor(Color.LightGreen);
-                }
+if (t.Status == "Open")
+{
+    statusCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+    statusCell.Style.Fill.BackgroundColor.SetColor(Color.LightCoral);
+}
+else if (t.Status == "In Progress" || t.Status == "Ongoing")
+{
+    statusCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+    statusCell.Style.Fill.BackgroundColor.SetColor(Color.LightYellow);
+}
+else if (t.Status == "Closed")
+{
+    statusCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
+    statusCell.Style.Fill.BackgroundColor.SetColor(Color.LightGreen);
+}
 
                 // DATE FORMAT FIX
                 sheet.Cells[row,12].Value = t.StartDate;
