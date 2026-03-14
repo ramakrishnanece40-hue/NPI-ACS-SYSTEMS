@@ -33,41 +33,47 @@ namespace NPI_ACS_Web.Controllers
             LoadDropdowns();
             return View();
         }
-
-       [HttpPost]
+[HttpPost]
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> Create(ACSTask task, IFormFile? Attachment)
 {
-    if (ModelState.IsValid)
+    try
     {
-        // Attachment is OPTIONAL
-        if (Attachment != null && Attachment.Length > 0)
+        if (ModelState.IsValid)
         {
-            var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
-
-            if (!Directory.Exists(folder))
-                Directory.CreateDirectory(folder);
-
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(Attachment.FileName);
-            var path = Path.Combine(folder, fileName);
-
-            using (var stream = new FileStream(path, FileMode.Create))
+            // FILE IS OPTIONAL
+            if (Attachment != null && Attachment.Length > 0)
             {
-                await Attachment.CopyToAsync(stream);
+                var uploadPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+
+                if (!Directory.Exists(uploadPath))
+                    Directory.CreateDirectory(uploadPath);
+
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(Attachment.FileName);
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await Attachment.CopyToAsync(stream);
+                }
+
+                task.AttachmentPath = "/uploads/" + fileName;
             }
 
-            task.AttachmentPath = "/uploads/" + fileName;
+            // SAVE TASK
+            _context.ACSTasks.Add(task);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
-        // Save task even if no file uploaded
-        _context.ACSTasks.Add(task);
-        await _context.SaveChangesAsync();
-
-        return RedirectToAction(nameof(Index));
+        LoadDropdowns();
+        return View(task);
     }
-
-    LoadDropdowns();
-    return View(task);
+    catch (Exception ex)
+    {
+        return Content("ERROR: " + ex.Message);
+    }
 }
 
         // =====================
