@@ -199,25 +199,30 @@ private readonly ApplicationDbContext _context;
                 sheet.Cells[row,9].Value = t.CustomerPIC;
                 sheet.Cells[row,10].Value = t.Priority;
 
-               // STATUS COLOR FIX
-var statusCell = sheet.Cells[row,11];
-statusCell.Style.Fill.PatternType = ExcelFillStyle.None;
-statusCell.Value = t.Status;
+             
+// STATUS COLOR FIX (robust)
+var statusCell = sheet.Cells[row, 11];
+var status = (t.Status ?? "").Trim().ToLower();
 
-if (t.Status == "Open")
+statusCell.Value = t.Status;
+statusCell.Style.Fill.PatternType = ExcelFillStyle.Solid; // always solid first
+
+if (status == "open")
 {
-    statusCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
     statusCell.Style.Fill.BackgroundColor.SetColor(Color.LightCoral);
 }
-else if (t.Status == "In Progress" || t.Status == "Ongoing")
+else if (status == "in progress" || status == "ongoing")
 {
-    statusCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
     statusCell.Style.Fill.BackgroundColor.SetColor(Color.LightYellow);
 }
-else if (t.Status == "Closed")
+else if (status == "closed")
 {
-    statusCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
     statusCell.Style.Fill.BackgroundColor.SetColor(Color.LightGreen);
+}
+else
+{
+    // if status not recognized, remove fill
+    statusCell.Style.Fill.PatternType = ExcelFillStyle.None;
 }
 
                 // DATE FORMAT FIX
