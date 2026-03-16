@@ -213,7 +213,7 @@ if (status == "open")
 }
 else if (status == "in progress" || status == "ongoing")
 {
-    statusCell.Style.Fill.BackgroundColor.SetColor(Color.LightYellow);
+    statusCell.Style.Fill.BackgroundColor.SetColor(Color.Yellow);
 }
 else if (status == "closed")
 {
