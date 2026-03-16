@@ -1,0 +1,23 @@
+@model NPI_ACS_Web.Models.ACSTask
+
+<h2>Task Details</h2>
+
+<table class="table">
+<tr><th>Project</th><td>@Model.Project</td></tr>
+<tr><th>ODM</th><td>@Model.ODM</td></tr>
+<tr><th>Product</th><td>@Model.Product</td></tr>
+<tr><th>Model</th><td>@Model.Model</td></tr>
+<tr><th>Question</th><td>@Model.Question</td></tr>
+<tr><th>Action Detail</th><td>@Model.ActionDetail</td></tr>
+<tr><th>4M</th><td>@Model.FourM</td></tr>
+<tr><th>Neolync PIC</th><td>@Model.NeolyncPIC</td></tr>
+<tr><th>Customer PIC</th><td>@Model.CustomerPIC</td></tr>
+<tr><th>Priority</th><td>@Model.Priority</td></tr>
+<tr><th>Status</th><td>@Model.Status</td></tr>
+<tr><th>Start Date</th><td>@Model.StartDate</td></tr>
+<tr><th>Due Date</th><td>@Model.DueDate</td></tr>
+<tr><th>Actual Close</th><td>@Model.ActualCloseDate</td></tr>
+<tr><th>Remarks</th><td>@Model.Remarks</td></tr>
+</table>
+
+<a asp-action="Index" class="btn btn-secondary">Back</a>

@@ -1,0 +1,149 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="utf-8" />
+
+<title>@ViewData["Title"] - NPI ACS</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+
+<style>
+
+body{
+background:#f4f6f9;
+}
+
+.card{
+border-radius:10px;
+}
+
+.navbar-brand{
+font-size:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
+
+<div class="container-fluid">
+
+<a class="navbar-brand fw-bold"
+asp-controller="Dashboard"
+asp-action="Index">
+
+<i class="bi bi-bar-chart"></i>
+NPI ACS
+
+</a>
+
+<button class="navbar-toggler"
+type="button"
+data-bs-toggle="collapse"
+data-bs-target="#menu">
+
+<span class="navbar-toggler-icon"></span>
+
+</button>
+
+<div class="collapse navbar-collapse" id="menu">
+
+<ul class="navbar-nav me-auto">
+
+<li class="nav-item">
+
+<a class="nav-link"
+asp-controller="Dashboard"
+asp-action="Index">
+
+<i class="bi bi-speedometer2"></i>
+Dashboard
+
+</a>
+
+</li>
+
+
+<li class="nav-item">
+
+<a class="nav-link"
+asp-controller="ACSTasks"
+asp-action="Index">
+
+<i class="bi bi-list-task"></i>
+Tasks
+
+</a>
+
+</li>
+
+
+<li class="nav-item">
+
+<a class="nav-link text-success fw-semibold"
+asp-controller="ACSTasks"
+asp-action="Create">
+
+<i class="bi bi-plus-circle"></i>
+Create Task
+
+</a>
+
+</li>
+
+
+<li class="nav-item">
+
+<a class="nav-link text-warning fw-semibold"
+asp-controller="ACSTasks"
+asp-action="ExportToExcel">
+
+<i class="bi bi-file-earmark-excel"></i>
+Download Excel
+
+</a>
+
+</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</nav>
+
+
+<div class="container mt-4">
+
+@RenderBody()
+
+</div>
+
+
+<footer class="text-center mt-5 mb-3 text-muted">
+
+NPI ACS Tracking System © @DateTime.Now.Year
+
+</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+@RenderSection("Scripts", required: false)
+
+</body>
+
+</html>
