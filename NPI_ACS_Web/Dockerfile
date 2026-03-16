@@ -1,12 +1,11 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY NPI_ACS_Web/NPI_ACS_Web.csproj NPI_ACS_Web/
-RUN dotnet restore NPI_ACS_Web/NPI_ACS_Web.csproj
+COPY NPI_ACS_Web.csproj .
+RUN dotnet restore NPI_ACS_Web.csproj
 
 COPY . .
-WORKDIR /src/NPI_ACS_Web
-RUN dotnet publish -c Release -o /app
+RUN dotnet publish NPI_ACS_Web.csproj -c Release -o /app
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
